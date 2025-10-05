@@ -24,6 +24,7 @@ namespace BulkUpHeroes.Player
 
         [Header("References")]
         [SerializeField] private PlayerStats _playerStats;
+        [SerializeField] private SidekickPartSwapper _partSwapper;
         #endregion
 
         #region State
@@ -89,6 +90,21 @@ namespace BulkUpHeroes.Player
                 if (_playerStats == null)
                 {
                     Debug.LogError("[CharacterPartManager] PlayerStats component not found!");
+                }
+            }
+
+            if (_partSwapper == null)
+            {
+                _partSwapper = GetComponent<SidekickPartSwapper>();
+                if (_partSwapper != null)
+                {
+                    // Setup fallback slots
+                    _partSwapper.SetSlots(_headSlot, _armsSlot, _torsoSlot, _legsSlot);
+                    Debug.Log("[CharacterPartManager] SidekickPartSwapper configured for fallback mode");
+                }
+                else
+                {
+                    Debug.LogWarning("[CharacterPartManager] SidekickPartSwapper not found! Part visuals may not work correctly.");
                 }
             }
 
@@ -272,7 +288,27 @@ namespace BulkUpHeroes.Player
         private void CreatePartVisual(PartType partType, PartData part)
         {
             PartSlot slot = _partSlots[partType];
+            bool usedSidekick = false;
 
+            // Try to use Sidekick integration first
+            if (_partSwapper != null && !string.IsNullOrEmpty(part.sidekickPartID))
+            {
+                Transform slotTransform = _partSwapper.SwapPart(partType, part.sidekickPartID, out usedSidekick);
+
+                if (usedSidekick)
+                {
+                    Debug.Log($"[CharacterPartManager] Equipped {part.rarity} {partType} using Sidekick: {part.sidekickPartID}");
+                    return; // Sidekick handled the visual
+                }
+
+                // If not using Sidekick, slotTransform will be returned for fallback
+                if (slotTransform != null)
+                {
+                    slot.slotTransform = slotTransform;
+                }
+            }
+
+            // Fallback: Use dummy visual system
             if (slot.slotTransform == null)
             {
                 Debug.LogWarning($"[CharacterPartManager] Cannot create visual - {partType} slot transform is null!");
@@ -316,7 +352,7 @@ namespace BulkUpHeroes.Player
             // Store reference
             slot.currentVisual = visual;
 
-            Debug.Log($"[CharacterPartManager] Created visual for {part.rarity} {partType}");
+            Debug.Log($"[CharacterPartManager] Created fallback visual for {part.rarity} {partType}");
         }
 
         /// <summary>
@@ -324,13 +360,28 @@ namespace BulkUpHeroes.Player
         /// </summary>
         private void RemovePartVisual(PartType partType)
         {
+            bool usedSidekick = false;
+
+            // Try to use Sidekick integration first
+            if (_partSwapper != null)
+            {
+                Transform slotTransform = _partSwapper.RemovePart(partType, out usedSidekick);
+
+                if (usedSidekick)
+                {
+                    Debug.Log($"[CharacterPartManager] Removed {partType} using Sidekick");
+                    return; // Sidekick handled the removal
+                }
+            }
+
+            // Fallback: Remove dummy visual
             PartSlot slot = _partSlots[partType];
 
             if (slot.currentVisual != null)
             {
                 Destroy(slot.currentVisual);
                 slot.currentVisual = null;
-                Debug.Log($"[CharacterPartManager] Removed visual for {partType}");
+                Debug.Log($"[CharacterPartManager] Removed fallback visual for {partType}");
             }
         }
 

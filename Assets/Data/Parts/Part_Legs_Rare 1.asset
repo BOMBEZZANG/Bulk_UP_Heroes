@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69cc9474bfb80c840ab7e8276c8e8f8f, type: 3}
   m_Name: Part_Legs_Rare 1
   m_EditorClassIdentifier: 
-  partID: Part_Legs_rare_1
+  partID: MSC_Head_Legs_Light_01
   partType: 3
   rarity: 1
   displayName: Common rare
@@ -24,3 +24,6 @@ MonoBehaviour:
   equippedPrefab: {fileID: 0}
   partColor: {r: 1, g: 1, b: 0.5882353, a: 1}
   shapeType: 0
+  sidekickPartID: SK_SCFI_CIVL_09_18LEGL_HU01
+  dropMeshID: 
+  rarityMaterial: {fileID: 0}

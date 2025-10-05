@@ -1,0 +1,173 @@
+# Bulk Up Heroes - Synty Sidekick Part ID Mapping
+# Phase 4: Reference document for mapping game parts to Sidekick Character IDs
+#
+# Format: [PartType]_[Rarity] = [Sidekick_Part_ID]
+#
+# Instructions:
+# 1. Open Sidekick Character Creator: Window > Sidekick > Character Creator
+# 2. Browse available parts to find exact part IDs
+# 3. Update this mapping with actual Sidekick part IDs from your asset
+# 4. Copy these IDs to corresponding PartData ScriptableObject assets
+#
+# Note: The IDs below are EXAMPLES. Replace with actual IDs from your Sidekick package.
+
+# ============================================
+# HEAD PARTS
+# ============================================
+
+Head_Common = MSC_Head_Basic_01
+# Description: Basic helmet/headgear for common drops
+# Stats: +10% Health
+# Visual: Simple, low-poly helmet
+
+Head_Rare = MSC_Head_Armor_Light_01
+# Description: Light armor helmet for rare drops
+# Stats: +15% Health (with rare multiplier = 22.5%)
+# Visual: Medium detail armor with blue tint
+
+Head_Epic = MSC_Head_Armor_Heavy_01
+# Description: Heavy armor helmet for epic drops
+# Stats: +20% Health (with epic multiplier = 40%)
+# Visual: High detail armor with purple glow
+
+
+# ============================================
+# ARMS PARTS
+# ============================================
+
+Arms_Common = MSC_Arms_Basic_01
+# Description: Basic arm armor/guards
+# Stats: +10% Damage
+# Visual: Simple bracers or guards
+
+Arms_Rare = MSC_Arms_Armor_Light_01
+# Description: Light arm armor with padding
+# Stats: +15% Damage (with rare multiplier = 22.5%)
+# Visual: Padded armor with blue accents
+
+Arms_Epic = MSC_Arms_Armor_Heavy_01
+# Description: Heavy gauntlets with plating
+# Stats: +20% Damage (with epic multiplier = 40%)
+# Visual: Full gauntlets with purple glow
+
+
+# ============================================
+# TORSO PARTS
+# ============================================
+
+Torso_Common = MSC_Torso_Basic_01
+# Description: Basic chest armor or vest
+# Stats: +8% Health, +5% Attack Speed
+# Visual: Simple vest or light armor
+
+Torso_Rare = MSC_Torso_Armor_Light_01
+# Description: Light chest plate
+# Stats: +12% Health, +8% Attack Speed (with rare multiplier)
+# Visual: Metal chest plate with blue details
+
+Torso_Epic = MSC_Torso_Armor_Heavy_01
+# Description: Heavy chest plate with pauldrons
+# Stats: +15% Health, +10% Attack Speed (with epic multiplier)
+# Visual: Full plate armor with purple glow
+
+
+# ============================================
+# LEGS PARTS
+# ============================================
+
+Legs_Common = MSC_Legs_Basic_01
+# Description: Basic leg armor or pants
+# Stats: +5% Move Speed
+# Visual: Simple leg guards or padded pants
+
+Legs_Rare = MSC_Legs_Armor_Light_01
+# Description: Light leg armor with greaves
+# Stats: +8% Move Speed (with rare multiplier = 12%)
+# Visual: Metal greaves with blue trim
+
+Legs_Epic = MSC_Legs_Armor_Heavy_01
+# Description: Heavy leg armor with full plating
+# Stats: +10% Move Speed (with epic multiplier = 20%)
+# Visual: Full leg armor with purple glow
+
+
+# ============================================
+# DROP MESH IDs (Optional - for pickup visuals)
+# ============================================
+
+# If you want different meshes for dropped pickups, specify them here:
+# These are typically simplified versions of the equipped parts
+
+Head_Common_Drop = MSC_Head_Basic_01_Icon
+Head_Rare_Drop = MSC_Head_Armor_Light_01_Icon
+Head_Epic_Drop = MSC_Head_Armor_Heavy_01_Icon
+
+Arms_Common_Drop = MSC_Arms_Basic_01_Icon
+Arms_Rare_Drop = MSC_Arms_Armor_Light_01_Icon
+Arms_Epic_Drop = MSC_Arms_Armor_Heavy_01_Icon
+
+Torso_Common_Drop = MSC_Torso_Basic_01_Icon
+Torso_Rare_Drop = MSC_Torso_Armor_Light_01_Icon
+Torso_Epic_Drop = MSC_Torso_Armor_Heavy_01_Icon
+
+Legs_Common_Drop = MSC_Legs_Basic_01_Icon
+Legs_Rare_Drop = MSC_Legs_Armor_Light_01_Icon
+Legs_Epic_Drop = MSC_Legs_Armor_Heavy_01_Icon
+
+
+# ============================================
+# ALTERNATIVE PART IDs (For variety)
+# ============================================
+
+# You can create multiple variations by adding numbered suffixes:
+# Head_Common_Alt1 = MSC_Head_Cap_01
+# Head_Common_Alt2 = MSC_Head_Hood_01
+# etc.
+
+
+# ============================================
+# USAGE NOTES
+# ============================================
+
+# 1. Finding Part IDs:
+#    - Open Sidekick Character Creator
+#    - Select a category (Head, Arms, Torso, Legs)
+#    - Hover over parts to see their IDs in the inspector
+#    - Copy exact ID strings (case-sensitive)
+
+# 2. Updating PartData Assets:
+#    - Navigate to Assets/Data/Parts/ in Unity
+#    - Select a PartData asset (e.g., Part_Head_Common)
+#    - In Inspector, paste the ID into "Sidekick Part ID" field
+#    - Optionally set "Drop Mesh ID" for pickup visual
+#    - Assign "Rarity Material" for visual effects
+
+# 3. Prefixes may vary:
+#    - MSC = Modular Sidekick Character
+#    - Your package might use different prefixes
+#    - Check your actual asset structure
+
+# 4. Testing:
+#    - Equip parts in-game to verify IDs work
+#    - Check console for any "Part ID not found" errors
+#    - Adjust IDs if meshes don't appear correctly
+
+# ============================================
+# TROUBLESHOOTING
+# ============================================
+
+# Part not appearing:
+# - Verify ID is exact match (case-sensitive)
+# - Check Sidekick component is on BaseCharacter
+# - Ensure "Enable Runtime Swap" is checked
+# - Confirm part category matches PartType
+
+# Wrong mesh appearing:
+# - Double-check ID in both this file and PartData asset
+# - Verify part belongs to correct category
+# - Check for typos in part ID string
+
+# Performance issues:
+# - Reduce texture sizes in Sidekick settings
+# - Enable mesh combining after part swaps
+# - Use mobile optimization settings

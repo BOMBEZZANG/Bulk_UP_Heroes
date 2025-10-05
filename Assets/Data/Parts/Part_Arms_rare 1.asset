@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69cc9474bfb80c840ab7e8276c8e8f8f, type: 3}
   m_Name: Part_Arms_rare 1
   m_EditorClassIdentifier: 
-  partID: Part_Arms_common_1
+  partID: MSC_Arms_Basic_01
   partType: 2
   rarity: 0
   displayName: Arms common
@@ -24,3 +24,6 @@ MonoBehaviour:
   equippedPrefab: {fileID: 0}
   partColor: {r: 0.39215687, g: 0.5882353, b: 1, a: 1}
   shapeType: 0
+  sidekickPartID: SK_HUMN_BASE_01_11AUPL_HU01
+  dropMeshID: 
+  rarityMaterial: {fileID: 0}

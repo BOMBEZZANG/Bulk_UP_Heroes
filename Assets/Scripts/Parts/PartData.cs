@@ -46,19 +46,31 @@ namespace BulkUpHeroes.Parts
         public float moveSpeedMultiplier = 0f;
         #endregion
 
-        #region Visual Data (Dummy Phase)
-        [Header("Dummy Visual Data")]
-        [Tooltip("Colored primitive for pickup")]
+        #region Visual Data (Dummy Phase - DEPRECATED)
+        [Header("Dummy Visual Data (DEPRECATED - Phase 3)")]
+        [Tooltip("Colored primitive for pickup - DEPRECATED")]
         public GameObject dropPrefab;
 
-        [Tooltip("Colored primitive when equipped")]
+        [Tooltip("Colored primitive when equipped - DEPRECATED")]
         public GameObject equippedPrefab;
 
         [Tooltip("Color for particle effects and UI")]
         public Color partColor = Color.white;
 
-        [Tooltip("Primitive shape type (for reference)")]
+        [Tooltip("Primitive shape type (for reference) - DEPRECATED")]
         public PrimitiveType shapeType;
+        #endregion
+
+        #region Synty Integration (Phase 4)
+        [Header("Synty Sidekick Integration")]
+        [Tooltip("Sidekick part ID for runtime mesh swapping (e.g., 'MSC_Head_Basic_01')")]
+        public string sidekickPartID;
+
+        [Tooltip("Optional: Different mesh ID for dropped pickup visual")]
+        public string dropMeshID;
+
+        [Tooltip("Material override for rarity-specific visual effects")]
+        public Material rarityMaterial;
         #endregion
 
         #region Calculated Properties

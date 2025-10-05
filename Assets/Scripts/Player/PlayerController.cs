@@ -131,11 +131,13 @@ namespace BulkUpHeroes.Player
                 else
                 {
                     _moveDirection.Normalize();
+                    Debug.Log($"[PlayerController] Moving: {_moveDirection}, Speed: {_currentSpeed}");
                 }
             }
             else
             {
                 _moveDirection = Vector3.zero;
+                Debug.LogWarning("[PlayerController] VirtualJoystick is null!");
             }
 
             // Get current speed from stats

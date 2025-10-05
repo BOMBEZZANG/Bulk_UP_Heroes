@@ -42,7 +42,10 @@ namespace BulkUpHeroes.Combat
         private bool _isFlashing = false;
         private float _flashTimer = 0f;
         private Color[] _originalColors;
-        private Material[] _materials;
+
+        // Use MaterialPropertyBlock instead of material instances
+        private MaterialPropertyBlock _propertyBlock;
+        private static readonly int _colorProperty = Shader.PropertyToID("_Color");
 
         // Death animation state
         private Vector3 _originalScale;
@@ -53,9 +56,6 @@ namespace BulkUpHeroes.Combat
         private void Awake()
         {
             InitializeComponents();
-
-            // Pre-warm immediately in Awake after materials are cached
-            PrewarmDamageFlash();
         }
 
         private void Update()
@@ -68,6 +68,7 @@ namespace BulkUpHeroes.Combat
         #region Initialization
         /// <summary>
         /// Initialize components and cache references.
+        /// Uses MaterialPropertyBlock to avoid creating material instances.
         /// </summary>
         private void InitializeComponents()
         {
@@ -78,32 +79,39 @@ namespace BulkUpHeroes.Combat
 
             _isPlayer = gameObject.CompareTag(GameConstants.TAG_PLAYER);
 
-            // Cache materials and original colors
+            // Initialize MaterialPropertyBlock
+            _propertyBlock = new MaterialPropertyBlock();
+
+            // Cache original colors from SHARED materials (no instances created!)
             if (_renderers.Length > 0)
             {
-                int materialCount = 0;
-                foreach (Renderer r in _renderers)
-                {
-                    materialCount += r.sharedMaterials.Length; // Use sharedMaterials for counting
-                }
+                _originalColors = new Color[_renderers.Length];
 
-                _materials = new Material[materialCount];
-                _originalColors = new Color[materialCount];
-
-                int index = 0;
-                foreach (Renderer r in _renderers)
+                for (int i = 0; i < _renderers.Length; i++)
                 {
-                    // Access materials once to create instances, then cache them
-                    Material[] mats = r.materials; // This creates instances only once
-                    foreach (Material mat in mats)
+                    // Use sharedMaterial to avoid creating instances
+                    if (_renderers[i].sharedMaterial != null)
                     {
-                        _materials[index] = mat;
-                        _originalColors[index] = mat.color;
-                        index++;
+                        // Check if material has _Color property (standard shader)
+                        if (_renderers[i].sharedMaterial.HasProperty("_Color"))
+                        {
+                            _originalColors[i] = _renderers[i].sharedMaterial.color;
+                        }
+                        // Try _BaseColor for URP/Sidekick shaders
+                        else if (_renderers[i].sharedMaterial.HasProperty("_BaseColor"))
+                        {
+                            _originalColors[i] = _renderers[i].sharedMaterial.GetColor("_BaseColor");
+                        }
+                        else
+                        {
+                            // Fallback to white if no color property found
+                            _originalColors[i] = Color.white;
+                            Debug.LogWarning($"[DamageHandler] Material '{_renderers[i].sharedMaterial.name}' has no _Color or _BaseColor property, using white");
+                        }
                     }
                 }
 
-                Debug.Log($"[DamageHandler] Cached {_materials.Length} material instances");
+                Debug.Log($"[DamageHandler] Initialized with MaterialPropertyBlock (NO material instances created)");
             }
 
             if (_damageable == null)
@@ -111,35 +119,7 @@ namespace BulkUpHeroes.Combat
                 Debug.LogError($"[DamageHandler] No IDamageable component on {gameObject.name}!");
             }
 
-            Debug.Log($"[DamageHandler] Initialized on {gameObject.name} with {_materials.Length} materials");
-        }
-
-        /// <summary>
-        /// Pre-warm damage flash system to avoid first-hit lag spike.
-        /// Aggressively triggers material color changes to compile shaders.
-        /// </summary>
-        private void PrewarmDamageFlash()
-        {
-            if (_materials == null || _materials.Length == 0) return;
-
-            // Aggressively trigger material color changes multiple times
-            // This forces shader variant compilation and GPU state initialization
-            for (int warmup = 0; warmup < 3; warmup++)
-            {
-                foreach (Material mat in _materials)
-                {
-                    if (mat != null)
-                    {
-                        // Toggle between flash color and original to force shader compilation
-                        mat.color = warmup % 2 == 0 ? _damageFlashColor : _originalColors[System.Array.IndexOf(_materials, mat)];
-                    }
-                }
-            }
-
-            // Final restore to original colors
-            RestoreOriginalColors();
-
-            Debug.Log($"[DamageHandler] Pre-warmed damage flash on {gameObject.name}");
+            Debug.Log($"[DamageHandler] Initialized on {gameObject.name} with {_renderers.Length} renderers");
         }
         #endregion
 
@@ -186,19 +166,20 @@ namespace BulkUpHeroes.Combat
 
         #region Visual Feedback
         /// <summary>
-        /// Trigger damage flash effect.
+        /// Trigger damage flash effect using MaterialPropertyBlock.
         /// </summary>
         private void TriggerDamageFlash()
         {
             _isFlashing = true;
             _flashTimer = _damageFlashDuration;
 
-            // Set flash color
-            foreach (Material mat in _materials)
+            // Set flash color using MaterialPropertyBlock (NO shader compilation!)
+            for (int i = 0; i < _renderers.Length; i++)
             {
-                if (mat != null)
+                if (_renderers[i] != null)
                 {
-                    mat.color = _damageFlashColor;
+                    _propertyBlock.SetColor(_colorProperty, _damageFlashColor);
+                    _renderers[i].SetPropertyBlock(_propertyBlock);
                 }
             }
         }
@@ -221,15 +202,16 @@ namespace BulkUpHeroes.Combat
         }
 
         /// <summary>
-        /// Restore original material colors.
+        /// Restore original material colors using MaterialPropertyBlock.
         /// </summary>
         private void RestoreOriginalColors()
         {
-            for (int i = 0; i < _materials.Length; i++)
+            for (int i = 0; i < _renderers.Length; i++)
             {
-                if (_materials[i] != null && i < _originalColors.Length)
+                if (_renderers[i] != null && i < _originalColors.Length)
                 {
-                    _materials[i].color = _originalColors[i];
+                    _propertyBlock.SetColor(_colorProperty, _originalColors[i]);
+                    _renderers[i].SetPropertyBlock(_propertyBlock);
                 }
             }
         }
@@ -273,7 +255,7 @@ namespace BulkUpHeroes.Combat
         }
 
         /// <summary>
-        /// Update death animation.
+        /// Update death animation using MaterialPropertyBlock.
         /// </summary>
         private void UpdateDeathAnimation()
         {
@@ -289,15 +271,16 @@ namespace BulkUpHeroes.Combat
                 // Scale down
                 _transform.localScale = Vector3.Lerp(_originalScale, Vector3.zero, progress);
 
-                // Fade out
+                // Fade out using MaterialPropertyBlock
                 float alpha = Mathf.Lerp(1f, 0f, progress);
-                foreach (Material mat in _materials)
+                for (int i = 0; i < _renderers.Length; i++)
                 {
-                    if (mat != null)
+                    if (_renderers[i] != null && i < _originalColors.Length)
                     {
-                        Color color = mat.color;
+                        Color color = _originalColors[i];
                         color.a = alpha;
-                        mat.color = color;
+                        _propertyBlock.SetColor(_colorProperty, color);
+                        _renderers[i].SetPropertyBlock(_propertyBlock);
                     }
                 }
             }
@@ -366,21 +349,21 @@ namespace BulkUpHeroes.Combat
         }
 
         /// <summary>
-        /// Reset visual state (for pooling).
+        /// Reset visual state (for pooling) using MaterialPropertyBlock.
         /// </summary>
         private void ResetVisualState()
         {
             _transform.localScale = _originalScale;
-            RestoreOriginalColors();
 
-            // Reset alpha
-            foreach (Material mat in _materials)
+            // Reset colors and alpha using MaterialPropertyBlock
+            for (int i = 0; i < _renderers.Length; i++)
             {
-                if (mat != null)
+                if (_renderers[i] != null && i < _originalColors.Length)
                 {
-                    Color color = mat.color;
+                    Color color = _originalColors[i];
                     color.a = 1f;
-                    mat.color = color;
+                    _propertyBlock.SetColor(_colorProperty, color);
+                    _renderers[i].SetPropertyBlock(_propertyBlock);
                 }
             }
 

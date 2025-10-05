@@ -67,8 +67,7 @@ namespace BulkUpHeroes.Core
 
         private void Start()
         {
-            // Warm up rendering after one frame
-            StartCoroutine(WarmupRenderingDelayed());
+            // Initialization complete
         }
 
         private void OnDestroy()
@@ -100,9 +99,6 @@ namespace BulkUpHeroes.Core
                     _enemyPoolParent,
                     allowGrowth: true
                 );
-
-                // Pre-warm physics system
-                PrewarmPhysics();
             }
             else
             {
@@ -111,7 +107,7 @@ namespace BulkUpHeroes.Core
 
             // Future: Initialize pickup pool
 
-            Debug.Log("[PoolManager] All pools initialized");
+            Debug.Log("[PoolManager] All pools initialized - NO WARMUP");
         }
 
         /// <summary>
@@ -124,35 +120,6 @@ namespace BulkUpHeroes.Core
             Physics.OverlapSphere(Vector3.zero, 1f, GameConstants.PlayerLayerMask);
 
             Debug.Log("[PoolManager] Physics system pre-warmed");
-        }
-
-        /// <summary>
-        /// Warm up shaders by spawning and rendering enemy off-screen.
-        /// </summary>
-        private IEnumerator WarmupRenderingDelayed()
-        {
-            // Wait for one frame to ensure scene is ready
-            yield return null;
-
-            if (_enemyPool == null) yield break;
-
-            Debug.Log("[PoolManager] Starting shader warmup...");
-
-            // Spawn enemy off-screen
-            Vector3 offscreenPos = new Vector3(1000, -100, 1000);
-            Enemies.EnemyAI enemy = _enemyPool.Get(offscreenPos, Quaternion.identity);
-
-            if (enemy != null)
-            {
-                // Wait for rendering to occur (shader compilation)
-                yield return new WaitForEndOfFrame();
-                yield return null;
-
-                // Return to pool
-                _enemyPool.Return(enemy);
-
-                Debug.Log("[PoolManager] Shader warmup complete");
-            }
         }
 
         /// <summary>

@@ -33,6 +33,7 @@ namespace BulkUpHeroes.Parts
         #region Components
         private Collider _collider;
         private MeshRenderer _meshRenderer;
+        private MeshFilter _meshFilter;
         private Material _material;
         private Transform _transform;
         #endregion
@@ -79,11 +80,18 @@ namespace BulkUpHeroes.Parts
             _transform = transform;
             _collider = GetComponent<Collider>();
             _meshRenderer = GetComponent<MeshRenderer>();
+            _meshFilter = GetComponent<MeshFilter>();
 
             if (_meshRenderer != null)
             {
                 _material = _meshRenderer.material;
                 _originalColor = _material.color;
+            }
+
+            // If no collider, add one
+            if (_collider == null)
+            {
+                _collider = gameObject.AddComponent<SphereCollider>();
             }
 
             // Setup as trigger
@@ -104,16 +112,62 @@ namespace BulkUpHeroes.Parts
             _spawnTime = Time.time;
             _isPickedUp = false;
 
-            // Apply visual properties
-            if (_meshRenderer != null && _partData != null)
-            {
-                _material.color = _partData.partColor;
-                _originalColor = _partData.partColor;
-                _transform.localScale = Vector3.one * _partData.GetRarityScale();
-            }
+            // Load runtime visual
+            LoadPartVisual();
 
             // Enable collider
             _collider.enabled = true;
+        }
+
+        /// <summary>
+        /// Load the visual representation for this part.
+        /// Tries Sidekick mesh first, falls back to dummy visual.
+        /// </summary>
+        private void LoadPartVisual()
+        {
+            if (_partData == null) return;
+
+            bool visualLoaded = false;
+
+            // Try to load Sidekick mesh if available
+            if (!string.IsNullOrEmpty(_partData.dropMeshID) || !string.IsNullOrEmpty(_partData.sidekickPartID))
+            {
+                // For Phase 4, we'll use the dummy visual system
+                // In full implementation, this would load the Sidekick mesh
+                // visualLoaded = LoadSidekickMesh(_partData.dropMeshID ?? _partData.sidekickPartID);
+                Debug.Log($"[PartPickup] Sidekick mesh loading not fully implemented, using fallback");
+            }
+
+            // Fallback to dummy visual
+            if (!visualLoaded)
+            {
+                ApplyDummyVisual();
+            }
+        }
+
+        /// <summary>
+        /// Apply dummy visual (colored primitive).
+        /// </summary>
+        private void ApplyDummyVisual()
+        {
+            if (_meshRenderer != null && _partData != null)
+            {
+                // Apply rarity material if available
+                if (_partData.rarityMaterial != null)
+                {
+                    _meshRenderer.material = _partData.rarityMaterial;
+                    _material = _meshRenderer.material;
+                    _originalColor = _material.color;
+                }
+                else
+                {
+                    // Use part color
+                    _material.color = _partData.partColor;
+                    _originalColor = _partData.partColor;
+                }
+
+                _transform.localScale = Vector3.one * _partData.GetRarityScale();
+            }
         }
         #endregion
 

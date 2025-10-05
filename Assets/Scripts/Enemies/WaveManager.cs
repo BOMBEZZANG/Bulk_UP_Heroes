@@ -100,20 +100,10 @@ namespace BulkUpHeroes.Enemies
 
         /// <summary>
         /// Start first wave after a delay.
-        /// Increased delay ensures all systems (pooling, physics, shaders) are fully initialized.
         /// </summary>
         private IEnumerator StartFirstWaveDelayed()
         {
-            // Wait for systems to initialize
-            yield return new WaitForSeconds(0.5f);
-
-            // Ensure player is registered
-            if (!Player.PlayerManager.HasPlayer())
-            {
-                Debug.LogWarning("[WaveManager] Player not ready, waiting...");
-                yield return new WaitForSeconds(0.5f);
-            }
-
+            yield return new WaitForSeconds(1f);
             StartNextWave();
         }
         #endregion

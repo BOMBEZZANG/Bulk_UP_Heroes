@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69cc9474bfb80c840ab7e8276c8e8f8f, type: 3}
   m_Name: Part_Arms_Epic 2
   m_EditorClassIdentifier: 
-  partID: Part_Arms_Epic_1
+  partID: MSC_Arms_Armor_Heavy_01
   partType: 2
   rarity: 2
   displayName: Arms Epic
@@ -24,3 +24,6 @@ MonoBehaviour:
   equippedPrefab: {fileID: 0}
   partColor: {r: 0.78431374, g: 0.8627451, b: 1, a: 1}
   shapeType: 0
+  sidekickPartID: SK_FANT_KNGT_17_11AUPL_HU01
+  dropMeshID: 
+  rarityMaterial: {fileID: 0}

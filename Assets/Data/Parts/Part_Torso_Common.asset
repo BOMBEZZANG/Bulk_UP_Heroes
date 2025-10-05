@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69cc9474bfb80c840ab7e8276c8e8f8f, type: 3}
   m_Name: Part_Torso_Common
   m_EditorClassIdentifier: 
-  partID: Part_Torso_Common_1
+  partID: MSC_Torso_Basic_01
   partType: 1
   rarity: 0
   displayName: Torso Head
@@ -24,3 +24,6 @@ MonoBehaviour:
   equippedPrefab: {fileID: 0}
   partColor: {r: 0.39215687, g: 1, b: 0.39215687, a: 1}
   shapeType: 0
+  sidekickPartID: SK_HUMN_BASE_01_10TORS_HU01
+  dropMeshID: 
+  rarityMaterial: {fileID: 0}

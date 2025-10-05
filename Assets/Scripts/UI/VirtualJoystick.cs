@@ -9,7 +9,7 @@ namespace BulkUpHeroes.UI
     /// Virtual joystick for mobile touch controls.
     /// Appears on touch down in the left half of the screen.
     ///
-    /// Phase 1: Basic joystick functionality
+    /// Phase 1: Basic joystick functionality using direct touch input
     /// Future: Can add visual effects and haptic feedback
     /// </summary>
     public class VirtualJoystick : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointerUpHandler
@@ -24,6 +24,7 @@ namespace BulkUpHeroes.UI
         [SerializeField] private float _handleRange = 50f;
         [SerializeField] private float _deadZone = 0.1f;
         [SerializeField] private bool _dynamicJoystick = false; // Joystick appears at touch position (disabled for Phase 1)
+        [SerializeField] private bool _useDirectTouchInput = true; // Use Input.touches instead of EventSystem (more reliable on mobile)
 
         [Header("Colors")]
         [SerializeField] private Color _inactiveColor = new Color(1f, 1f, 1f, 0.5f);
@@ -47,6 +48,7 @@ namespace BulkUpHeroes.UI
         private Canvas _canvas;
         private RectTransform _canvasRect;
         private Vector2 _joystickStartPosition;
+        private float _screenWidthHalf;
         #endregion
 
         #region Unity Lifecycle
@@ -58,27 +60,35 @@ namespace BulkUpHeroes.UI
         private void Start()
         {
             ResetJoystick();
+            _screenWidthHalf = Screen.width * 0.5f;
         }
 
         private void Update()
         {
-            // Handle multi-touch scenario
-            if (_isTouching && Input.touchCount > 0)
+            if (_useDirectTouchInput)
             {
-                // Verify our touch is still active
-                bool touchStillActive = false;
-                foreach (Touch touch in Input.touches)
+                ProcessDirectTouchInput();
+            }
+            else
+            {
+                // Handle multi-touch scenario for EventSystem mode
+                if (_isTouching && Input.touchCount > 0)
                 {
-                    if (touch.fingerId == _touchId)
+                    // Verify our touch is still active
+                    bool touchStillActive = false;
+                    foreach (Touch touch in Input.touches)
                     {
-                        touchStillActive = true;
-                        break;
+                        if (touch.fingerId == _touchId)
+                        {
+                            touchStillActive = true;
+                            break;
+                        }
                     }
-                }
 
-                if (!touchStillActive)
-                {
-                    OnPointerUp(null);
+                    if (!touchStillActive)
+                    {
+                        OnPointerUp(null);
+                    }
                 }
             }
         }
@@ -133,6 +143,200 @@ namespace BulkUpHeroes.UI
             _joystickStartPosition = _joystickContainer.anchoredPosition;
 
             Debug.Log("[VirtualJoystick] Initialized");
+        }
+        #endregion
+
+        #region Direct Touch Input Processing
+        /// <summary>
+        /// Process touch input directly using Input.touches API.
+        /// More reliable than EventSystem on mobile builds.
+        /// </summary>
+        private void ProcessDirectTouchInput()
+        {
+            // Handle touch input
+            if (Input.touchCount > 0)
+            {
+                // Find touch in left half of screen (joystick zone)
+                Touch? activeTouch = null;
+
+                if (_isTouching)
+                {
+                    // Already tracking a touch - find it
+                    foreach (Touch touch in Input.touches)
+                    {
+                        if (touch.fingerId == _touchId)
+                        {
+                            activeTouch = touch;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    // Look for new touch in left half
+                    foreach (Touch touch in Input.touches)
+                    {
+                        if (touch.position.x < _screenWidthHalf && touch.phase == TouchPhase.Began)
+                        {
+                            activeTouch = touch;
+                            break;
+                        }
+                    }
+                }
+
+                if (activeTouch.HasValue)
+                {
+                    Touch touch = activeTouch.Value;
+
+                    switch (touch.phase)
+                    {
+                        case TouchPhase.Began:
+                            HandleTouchBegan(touch.position, touch.fingerId);
+                            break;
+
+                        case TouchPhase.Moved:
+                        case TouchPhase.Stationary:
+                            HandleTouchDrag(touch.position);
+                            break;
+
+                        case TouchPhase.Ended:
+                        case TouchPhase.Canceled:
+                            HandleTouchEnded();
+                            break;
+                    }
+                }
+                else if (_isTouching)
+                {
+                    // Our touch was lost
+                    HandleTouchEnded();
+                }
+            }
+            // Handle mouse input for Unity Editor testing
+            else if (Application.isEditor)
+            {
+                if (Input.GetMouseButtonDown(0) && Input.mousePosition.x < _screenWidthHalf)
+                {
+                    HandleTouchBegan(Input.mousePosition, 0);
+                }
+                else if (Input.GetMouseButton(0) && _isTouching)
+                {
+                    HandleTouchDrag(Input.mousePosition);
+                }
+                else if (Input.GetMouseButtonUp(0) && _isTouching)
+                {
+                    HandleTouchEnded();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Handle touch/mouse began.
+        /// </summary>
+        private void HandleTouchBegan(Vector2 screenPosition, int touchId)
+        {
+            _isTouching = true;
+            _touchId = touchId;
+            _touchStartPosition = screenPosition;
+
+            // Position joystick at touch location if dynamic
+            if (_dynamicJoystick)
+            {
+                Vector2 localPoint;
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    _canvasRect,
+                    screenPosition,
+                    _canvas.worldCamera,
+                    out localPoint
+                );
+
+                _joystickContainer.anchoredPosition = localPoint;
+                Debug.Log($"[VirtualJoystick] Container repositioned to: {localPoint}");
+            }
+            else
+            {
+                // FIXED: Keep joystick at its original position (don't move it!)
+                // Container stays where it was placed in the scene
+                Debug.Log($"[VirtualJoystick] Container staying at original position: {_joystickContainer.anchoredPosition}");
+            }
+
+            // Show joystick
+            ShowJoystick(true);
+
+            Debug.Log($"[VirtualJoystick] Touch started at {screenPosition}, Dynamic={_dynamicJoystick}");
+        }
+
+        /// <summary>
+        /// Handle touch/mouse drag.
+        /// </summary>
+        private void HandleTouchDrag(Vector2 currentPosition)
+        {
+            Vector2 offset;
+
+            if (_dynamicJoystick)
+            {
+                // Dynamic: Calculate offset from touch start position
+                offset = currentPosition - _touchStartPosition;
+            }
+            else
+            {
+                // FIXED: Calculate offset from joystick container's CENTER position
+                // Convert joystick center to screen space
+                Vector2 joystickScreenPos;
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    _canvasRect,
+                    currentPosition,
+                    _canvas.worldCamera,
+                    out Vector2 localTouchPos
+                );
+
+                // Get joystick container's local position
+                Vector2 joystickLocalPos = _joystickBackground.anchoredPosition;
+
+                // Calculate offset in local space
+                offset = localTouchPos - (_joystickContainer.anchoredPosition + joystickLocalPos);
+
+                // Scale offset to match screen space
+                // For Screen Space - Overlay, we can use direct pixel offset
+                Vector3[] corners = new Vector3[4];
+                _canvasRect.GetWorldCorners(corners);
+                float canvasScale = _canvas.scaleFactor;
+
+                // Simpler approach: calculate offset from joystick center in screen space
+                Vector2 joystickCenterScreen = RectTransformUtility.WorldToScreenPoint(
+                    _canvas.worldCamera,
+                    _joystickBackground.position
+                );
+
+                offset = currentPosition - joystickCenterScreen;
+            }
+
+            // Clamp the offset to handle range
+            Vector2 clampedDirection = Vector2.ClampMagnitude(offset, _handleRange);
+
+            // Update handle position
+            if (_joystickHandle != null)
+            {
+                _joystickHandle.anchoredPosition = clampedDirection;
+            }
+
+            // Calculate normalized input (-1 to 1)
+            _inputDirection = clampedDirection / _handleRange;
+
+            // Apply dead zone
+            if (_inputDirection.magnitude < _deadZone)
+            {
+                _inputDirection = Vector2.zero;
+            }
+
+            Debug.Log($"[VirtualJoystick] Input: {_inputDirection:F2}, Offset: {offset:F2}, CurrentPos: {currentPosition}");
+        }
+
+        /// <summary>
+        /// Handle touch/mouse ended.
+        /// </summary>
+        private void HandleTouchEnded()
+        {
+            ResetJoystick();
         }
         #endregion
 
