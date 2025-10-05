@@ -79,6 +79,7 @@
     <Compile Include="Assets\Scripts\Core\ObjectPool.cs" />
     <Compile Include="Assets\Scripts\Parts\SidekickPartSwapper.cs" />
     <Compile Include="Assets\Scripts\Core\PoolManager.cs" />
+    <Compile Include="Assets\Scripts\Core\IsometricCameraController.cs" />
     <Compile Include="Assets\Scripts\UI\PartInventoryUI.cs" />
     <Compile Include="Assets\Synty\SidekickCharacters\_Demos\Scripts\RandomisedLayerWeight.cs" />
     <Compile Include="Assets\Synty\SidekickCharacters\_Demos\Scripts\RuntimePartsDemo.cs" />
