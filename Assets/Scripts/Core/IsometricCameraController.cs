@@ -42,6 +42,13 @@ namespace BulkUpHeroes.Core
 
         private void Awake()
         {
+            // Force unparent camera if it's parented to anything
+            if (transform.parent != null)
+            {
+                Debug.LogWarning($"[IsometricCamera] Camera was parented to {transform.parent.name}, unparenting for free movement!");
+                transform.SetParent(null);
+            }
+
             // Auto-find player if not assigned
             if (_target == null)
             {
@@ -69,6 +76,18 @@ namespace BulkUpHeroes.Core
         private void Start()
         {
             Debug.Log($"[IsometricCamera] Start - Camera Position: {transform.position}, Rotation: {transform.rotation.eulerAngles}");
+
+            // Set camera to correct position immediately on start (skip smoothing for initial positioning)
+            if (_target != null)
+            {
+                Vector3 initialPosition = CalculateIsometricPosition();
+                transform.position = initialPosition;
+
+                Vector3 lookAtPoint = _target.position + _targetOffset;
+                transform.LookAt(lookAtPoint);
+
+                Debug.Log($"[IsometricCamera] Set initial position: {initialPosition}, looking at: {lookAtPoint}");
+            }
         }
 
         private void LateUpdate()

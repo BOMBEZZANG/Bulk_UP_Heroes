@@ -177,6 +177,7 @@ GameObject:
   - component: {fileID: 6657289502016430376}
   - component: {fileID: 5815377835469335886}
   - component: {fileID: -3895159947695793748}
+  - component: {fileID: 6887554280567219627}
   m_Layer: 6
   m_Name: Player
   m_TagString: Player
@@ -380,3 +381,19 @@ MonoBehaviour:
   _characterParent: {fileID: 0}
   _baseModelPath: Meshes/SK_BaseModel
   _baseMaterialPath: Materials/M_BaseMaterial
+  _animatorController: {fileID: 9100000, guid: fb6e29cf398156f42965d3fc512345af, type: 2}
+--- !u!114 &6887554280567219627
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5934122437140055731}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66ff745ad90c5a24fa0ed21b4b2e3dd5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _playerController: {fileID: 0}
+  _sidekickController: {fileID: 0}
+  _speedThreshold: 0.1

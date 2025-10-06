@@ -26,6 +26,9 @@ namespace BulkUpHeroes.Parts
         [Header("Base Resources")]
         [SerializeField] private string _baseModelPath = "Meshes/SK_BaseModel";
         [SerializeField] private string _baseMaterialPath = "Materials/M_BaseMaterial";
+
+        [Header("Animation")]
+        [SerializeField] private RuntimeAnimatorController _animatorController;
         #endregion
 
         #region State
@@ -193,6 +196,9 @@ namespace BulkUpHeroes.Parts
                     _currentCharacter.transform.localPosition = Vector3.zero;
                     _currentCharacter.transform.localRotation = Quaternion.identity;
 
+                    // Setup Animator component for animations
+                    SetupAnimator();
+
                     Debug.Log($"[SidekickCharacterController] Character rebuilt with {partsToUse.Count} parts");
                 }
                 else
@@ -208,14 +214,49 @@ namespace BulkUpHeroes.Parts
 
         /// <summary>
         /// Add required body parts (base naked character).
+        /// Only adds parts that are NOT equipped with armor.
         /// </summary>
         private void AddRequiredBodyParts(List<SkinnedMeshRenderer> parts)
         {
-            // Add basic body parts that should always be present
-            // You can customize this based on what your base character needs
+            // Add base human body parts ONLY for slots that don't have armor equipped
+            // This prevents overlapping meshes
 
-            // For now, we'll just add torso/hips as minimum
-            TryAddPartByType(CharacterPartType.Hips, parts, "Hips_Underwear"); // Basic underwear
+            // Head - only if no helmet equipped
+            if (string.IsNullOrEmpty(_equippedParts[PartType.Head]))
+            {
+                TryAddPartByName(CharacterPartType.Head, parts, "SK_HUMN_BASE_01_01HEAD_HU01");
+            }
+
+            // Torso - only if no chest armor equipped
+            if (string.IsNullOrEmpty(_equippedParts[PartType.Torso]))
+            {
+                TryAddPartByName(CharacterPartType.Torso, parts, "SK_HUMN_BASE_01_10TORS_HU01");
+            }
+
+            // Arms - only if no arm armor equipped
+            if (string.IsNullOrEmpty(_equippedParts[PartType.Arms]))
+            {
+                TryAddPartByName(CharacterPartType.ArmUpperLeft, parts, "SK_HUMN_BASE_01_11AUPL_HU01");
+                TryAddPartByName(CharacterPartType.ArmUpperRight, parts, "SK_HUMN_BASE_01_12AUPR_HU01");
+                TryAddPartByName(CharacterPartType.ArmLowerLeft, parts, "SK_HUMN_BASE_01_13ALWL_HU01");
+                TryAddPartByName(CharacterPartType.ArmLowerRight, parts, "SK_HUMN_BASE_01_14ALWR_HU01");
+                TryAddPartByName(CharacterPartType.HandLeft, parts, "SK_HUMN_BASE_01_15HNDL_HU01");
+                TryAddPartByName(CharacterPartType.HandRight, parts, "SK_HUMN_BASE_01_16HNDR_HU01");
+            }
+
+            // Hips - always visible (usually covered by legs or torso)
+            TryAddPartByName(CharacterPartType.Hips, parts, "SK_HUMN_BASE_01_17HIPS_HU01");
+
+            // Legs - only if no leg armor equipped
+            if (string.IsNullOrEmpty(_equippedParts[PartType.Legs]))
+            {
+                TryAddPartByName(CharacterPartType.LegLeft, parts, "SK_HUMN_BASE_01_18LEGL_HU01");
+                TryAddPartByName(CharacterPartType.LegRight, parts, "SK_HUMN_BASE_01_19LEGR_HU01");
+                TryAddPartByName(CharacterPartType.FootLeft, parts, "SK_HUMN_BASE_01_20FOTL_HU01");
+                TryAddPartByName(CharacterPartType.FootRight, parts, "SK_HUMN_BASE_01_21FOTR_HU01");
+            }
+
+            Debug.Log("[SidekickCharacterController] Added base body parts (naked parts only for unequipped slots)");
         }
 
         /// <summary>
@@ -324,6 +365,39 @@ namespace BulkUpHeroes.Parts
                 {
                     parts.Add(renderer);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Setup Animator component on the character for animations.
+        /// </summary>
+        private void SetupAnimator()
+        {
+            if (_currentCharacter == null) return;
+
+            // Get or add Animator component
+            Animator animator = _currentCharacter.GetComponent<Animator>();
+            if (animator == null)
+            {
+                animator = _currentCharacter.AddComponent<Animator>();
+            }
+
+            // Assign animator controller if provided
+            if (_animatorController != null)
+            {
+                animator.runtimeAnimatorController = _animatorController;
+                Debug.Log($"[SidekickCharacterController] Animator setup with controller: {_animatorController.name}");
+            }
+            else
+            {
+                Debug.LogWarning("[SidekickCharacterController] No Animator Controller assigned - animations won't play!");
+            }
+
+            // Set avatar to humanoid (Sidekick characters have humanoid rigs)
+            // The avatar should be auto-created by Sidekick, but we can verify
+            if (animator.avatar == null)
+            {
+                Debug.LogWarning("[SidekickCharacterController] No Avatar found - animations may not work correctly!");
             }
         }
         #endregion

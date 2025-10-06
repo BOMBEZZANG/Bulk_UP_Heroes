@@ -1,6 +1,7 @@
 using UnityEngine;
 using BulkUpHeroes.Utils;
 using BulkUpHeroes.Core;
+using BulkUpHeroes.Player;
 
 namespace BulkUpHeroes.Combat
 {
@@ -30,6 +31,7 @@ namespace BulkUpHeroes.Combat
         private IStatsModifiable _stats;
         private IDamageable _selfDamageable;
         private Transform _transform;
+        private PlayerAnimationController _animationController; // For player punch animation
         #endregion
 
         #region Combat State
@@ -80,6 +82,9 @@ namespace BulkUpHeroes.Combat
             // Get stats component (works for both Player and Enemy)
             _stats = GetComponent<IStatsModifiable>();
             _selfDamageable = GetComponent<IDamageable>();
+
+            // Get animation controller (only for player)
+            _animationController = GetComponent<PlayerAnimationController>();
 
             if (_stats == null)
             {
@@ -220,6 +225,12 @@ namespace BulkUpHeroes.Combat
         public void Attack(IDamageable target)
         {
             if (target == null || !target.IsAlive) return;
+
+            // Trigger punch animation (if player)
+            if (_animationController != null)
+            {
+                _animationController.TriggerAttack();
+            }
 
             // Apply damage through DamageHandler for visual feedback
             float damageAmount = Damage;
